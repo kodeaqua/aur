@@ -5,6 +5,16 @@ Written by Adam Najmi Zidan
 ### Version
 1.0 - Initial release
 
+### Requirements
+1. At least you need more than 3GB free space at Internal Storage. Btw, it depends on your project. My kenzo has 2560M system partition. So, i always keep my Internal Storage has 4-5GB free space.
+2. Internet connection. You'll need up to 20mB to install/upgrade termux package(s)
+3. Knowledge about Android Porting
+
+### Special Thanks
+1. [Andrei Conache (xpirt)](https://github.com/xpirt)
+2. [Jake Valletta (jakev)](https://github.com/jakev)
+3. [Rendi Stiawan (rendiix)](https://github.com/rendiix)
+
 ### How to install
 if you're new in Termux, you must install git before installing AUR
 ``` console
