@@ -174,7 +174,7 @@ main_menu()
     case $INPUT in
     1) unpack;
        main_menu;;
-    2) repack;
+    2) detect_partition;
        main_menu;;
     3) setup_wizard;
        main_menu;;
