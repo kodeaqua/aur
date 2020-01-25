@@ -1,0 +1,478 @@
+#!/data/data/com.termux/files/usr/bin/bash
+# Android Unpack Repack
+# version 1.0
+# Written by: Adam Najmi Zidan (user-ilang)
+# Special Thanks to: 1. Andrei Conache (xpirt), for his img2sdat2img script
+#                    2. Jake Valletta (jakev), for his sefcontext-parser script
+#                    3. Rendi Stiawan (Rendiix), for his ext4fs-tools
+#                    4. Google, StackOverFlow, and many more!
+#
+# Notes: I don't know what the name of this project will be, so I just name it
+#        Android Unpack Repack (AUR). If there are similarities in names, please
+#        let me know immediately :)
+#
+# Supported OS version: 1. Lollipop 5.0 SDK21
+#                       2. Lollipop 5.1 SDK22
+#                       3. Marshmallow 6.0 SDK23
+#                       4. Nougat 7.0 SDK24
+#                       5. Nougat 7.1 SDK25
+#                       6. Oreo 8.0 SDK26
+#                       7. Oreo 8.1 SDK27
+#                       8. Pie 9.0 SDK28 [Need test in other devices]
+#                       9. Ten 10.0 SDK29 [Need test in other devices]
+#
+#
+# Begin list of all functions
+#
+
+# Start
+# if AUR was started, it decide to going main_menu or setup_wizard (for first time only)
+start()
+{
+    if [ -f $AUR ];
+      then
+        main_menu;
+      else
+        setup_wizard;
+    fi;
+}
+
+# Header
+# Just to show up AUR banner in terminal :D
+header()
+{
+    clear;
+    echo "------------------------------------------------";
+    echo "|                                              |";
+    echo "|   A N D R O I D  U N P A C K  R E P A C K    |";
+    echo "|                                              |";
+    echo "------------------------------------------------";
+    sleep 1;
+}
+
+# Setup Wizard
+# For AUR installation and checking AUR in menu
+setup_wizard()
+{
+
+    # Show header
+    header;
+    echo "| WELCOME TO AUR SETUP WIZARD!                 |";
+    echo "------------------------------------------------";
+
+    # Updating Package
+    echo "I: Update and Installing package(s)";
+    pkg_update >/dev/null 2>&1;
+
+    # Checking xpirt's scripts
+    if [ -d $XPIRT ];
+      then
+        echo "I: Found: img2sdat-sdat2img";
+      else
+        echo "I: Installing img2sdat-sdat2img...";
+        install_xpirt >/dev/null 2>&1;
+    fi;
+
+    # Checking jakev's scripts
+    if [ -d $JAKEV ];
+      then
+        echo "I: Found: sefcontext-parser";
+      else
+        echo "I: Installing sefcontext-parser...";
+        install_jakev >/dev/null 2>&1;
+    fi;
+
+    # Checking rendiix's scripts
+    if [ -d $RENDIIX ];
+      then
+        echo "I: Found: ext4fs-tools";
+      else
+        echo "I: Installing ext4fs-tools...";
+        install_rendiix >/dev/null 2>&1;
+    fi;
+
+    # Finishing
+    echo "I: Pushing aur script...";
+    mv $AUR_TMP $AUR >/dev/null 2>&1;
+    rm -rf $PWD/../aur >/dev/null 2>&1;
+
+    # Doneee
+    echo "I: AUR has been installed to your Termux";
+    echo "I: Run 'aur' in your working directory!";
+    echo "I: Bought to you by: user-ilang";
+    echo "------------------------------------------------";
+    echo "|  P R E S S  E N T E R  T O  C O N T I N U E  |";
+    read -p "------------------------------------------------" DONE;
+}
+
+# Updating packages
+# This will instal/update some packages (tsu git wget python brotli)
+pkg_update()
+{
+    pkg update -y;
+    pkg upgrade -y;
+    pkg install tsu git wget python brotli -y;
+}
+
+# Install img2sdat2img function
+install_xpirt()
+{
+    mkdir $XPIRT;
+    cd $XPIRT;
+    git clone https://github.com/xpirt/img2sdat.git;
+    git clone https://github.com/xpirt/sdat2img.git;
+}
+
+# Install sefcontext-parser
+install_jakev()
+{
+    mkdir $JAKEV;
+    cd $JAKEV;
+    git clone https://github.com/jakev/sefcontext-parser.git;
+    cd $PWD/sefcontext-parser;
+    python $PWD/setup.py install
+}
+
+# Install ext4utils
+install_rendiix()
+{
+    mkdir $RENDIIX;
+    cd $RENDIIX;
+    wget https://rendiix.github.io/install-repo.sh
+    ./install-repo.sh
+    pkg install ext4fs-tools;
+}
+
+# Img2sdat caller
+img2sdat()
+{
+    python $IMG2SDAT "$1" "$2" "$3" "$4" "$5";
+}
+
+# Sdat2img caller
+sdat2img()
+{
+    python $SDAT2IMG "$1" "$2" "$3";
+}
+
+# Show AUR's main menu
+main_menu()
+{
+    # AUR's list menus
+    header;
+    echo "| WELCOME!                                     |";
+    echo "------------------------------------------------";
+    echo " 1. Unpack                                     ";
+    echo " 2. Repack                                     ";
+    echo " 3. Check script                               ";
+    echo " 4. Contributors                               ";
+    echo " 0. Exit                                       ";
+    echo "------------------------------------------------";
+    read -p "> Select what's do you need [0-3]: " INPUT;
+
+    # Redirect to other functions
+    case $INPUT in
+    1) unpack;
+       main_menu;;
+    2) repack;
+       main_menu;;
+    3) setup_wizard;
+       main_menu;;
+    4) contributors;
+       main_menu;;
+    0) clear;
+       exit;;
+    *) main_menu;;
+    esac;
+}
+
+# Unpack function
+unpack()
+{
+    # Show up header
+    header;
+    echo "| UNPACKING                                    |";
+    echo "------------------------------------------------";
+
+    # Let's record time to unpack
+    DATE=$(date +%Y%m%d-%H%M);
+    DATESAVE=$DATE;
+    UNPACK_START=$(date +"%s");
+
+    # Cleaning old files
+    echo "I: Cleaning up old files..." | tee -i $AUR_LOGS/AUR-Unpack-"$DATESAVE".txt;
+    for dir in system vendor tmp;
+      do
+        rm -rf $PWD/$dir;
+    done;
+
+    # Checking if your dat was compressed with brotli or not
+    if [ -f $PWD/system.new.dat.br ];
+      then
+        echo "I: Decompressing system with brotli..." | tee -i $AUR_LOGS/AUR-Unpack-"$DATESAVE".txt;
+        brotli -d $PWD/system.new.dat.br;
+        rm -rf $PWD/system.new.dat.br;
+    elif [ -f $PWD/vendor.new.dat.br ];
+      then
+        echo "I: Decompressing vendor with brotli..." | tee -i $AUR_LOGS/AUR-Unpack-"$DATESAVE".txt;
+        brotli -d $PWD/vendor.new.dat.br;
+        rm -rf $PWD/vendor.new.dat.br;
+      else
+        echo "I: Skipping brotli decompressing..." | tee -i $AUR_LOGS/AUR-Unpack-"$DATESAVE".txt;
+    fi;
+
+    # If your dat aren't compressed with brotli, then your dat will automatically converted to image
+    if [ -f $PWD/system.new.dat ];
+      then
+        echo "I: Converting system with sdat2img..." | tee -i $AUR_LOGS/AUR-Unpack-"$DATESAVE".txt;
+        sdat2img $PWD/system.transfer.list $PWD/system.new.dat $PWD/system.img | tee -i $AUR_LOGS/AUR-Unpack-"$DATESAVE".txt;
+        rm -rf $PWD/system.new.dat $PWD/system.patch.dat $PWD/system.transfer.list;
+    elif [ -f $PWD/vendor.new.dat ];
+      then
+        echo "I: Converting vendor with sdat2img..." | tee -i $AUR_LOGS/AUR-Unpack-"$DATESAVE".txt;
+        sdat2img $PWD/vendor.transfer.list $PWD/vendor.new.dat $PWD/vendor.img | tee -i $AUR_LOGS/AUR-Unpack-"$DATESAVE".txt;
+        rm -rf $PWD/vendor.new.dat $PWD/vendor.patch.dat $PWD/vendor.transfer.list;
+      else
+        echo "I: Skipping sdat2img task" | tee -i $AUR_LOGS/AUR-Unpack-"$DATESAVE".txt;
+    fi;
+
+    # Extracting your image
+    if [ -f $PWD/system.img ];
+      then
+        echo "I: Extracting system image..." | tee -i $AUR_LOGS/AUR-Unpack-"$DATESAVE".txt;
+        mkdir $PWD/system $PWD/tmp;
+        losetup /dev/block/loop3 $PWD/system.img;
+        mount -t ext4 /dev/block/loop3 $PWD/system;
+        cp -rfp $PWD/system $PWD/tmp;
+        losetup -d /dev/block/loop3;
+        umount /dev/block/loop3;
+        mv $PWD/tmp/system $PWD;
+        rm -rf $PWD/system.img $PWD/tmp;
+    elif [ -f $PWD/vendor.img ];
+      then
+        echo "I: Extracting vendor image..." | tee -i $AUR_LOGS/AUR-Unpack-"$DATESAVE".txt;
+        mkdir $PWD/vendor $PWD/tmp;
+        losetup /dev/block/loop3 $PWD/vendor.img;
+        mount -t ext4 /dev/block/loop3 $PWD/vendor;
+        cp -rfp $PWD/vendor $PWD/tmp;
+        losetup -d /dev/block/loop3;
+        umount /dev/block/loop3;
+        mv $PWD/tmp/vendor $PWD;
+        rm -rf $PWD/vendor.img $PWD/tmp;
+      else
+        echo "E: Failed to extract image..." | tee -i $AUR_LOGS/AUR-Unpack-"$DATESAVE".txt;
+    fi;
+
+    # Record the time again
+    UNPACK_END=$(date +"%s");
+    DIFF_UNPACK=$(($UNPACK_END - $UNPACK_START));
+
+    # Done
+    echo "I: Tasks complete..." | tee -i $AUR_LOGS/AUR-Unpack-"$DATESAVE".txt;
+    echo "I: Unpacking took $(($DIFF_UNPACK / 60)) minute(s) and $(($DIFF_UNPACK % 60)) second(s)" | tee -i $AUR_LOGS/AUR-Unpack-"$DATESAVE".txt;
+    echo "------------------------------------------------";
+    echo "|  P R E S S  E N T E R  T O  C O N T I N U E  |";
+    read -p "------------------------------------------------" DONE;
+}
+
+# Detecting partition
+detect_partition()
+{
+    if [ -d $PWD/system ];
+      then
+        system_info;
+    elif [ -d $PWD/vendor ];
+      then
+        vendor_info;
+      else
+        echo "E: Didn't found any unpacked system" | tee -i $AUR_LOGS/AUR-Repack-"$DATESAVE".txt;
+    fi;
+}
+
+# Get system information
+system_info()
+{
+    header;
+    echo "| SYSTEM INFO                                  |";
+    echo "------------------------------------------------";
+    read -p "  Partition size [Ex:2560M]  : " PARTITION_SIZE | tee -i $AUR_LOGS/AUR-Repack-"$DATESAVE".txt;
+    read -p "  Build variant [IMG/DAT]    : " BUILD_VARIANT | tee -i $AUR_LOGS/AUR-Repack-"$DATESAVE".txt;
+    read -p "  SDK [1=21 2=22 3=23 4=24+] : " SDK_VERSION | tee -i $AUR_LOGS/AUR-Repack-"$DATESAVE".txt;
+    read -p "  Brotli compress [Y/N]      : " USE_BROTLI | tee -i $AUR_LOGS/AUR-Repack-"$DATESAVE".txt;
+    read -p "  Cleanup after finish [Y/N] : " DO_CLEANUP | tee -i $AUR_LOGS/AUR-Repack-"$DATESAVE".txt;
+    echo "------------------------------------------------";
+    sleep 1;
+    repack;
+}
+
+
+# Get vendor information
+vendor_info()
+{
+    header;
+    echo "| VENDOR INFO                                  |";
+    echo "------------------------------------------------";
+    read -p "  Partition size [Ex: 512M]  : " PARTITION_SIZE | tee -i $AUR_LOGS/AUR-Repack-"$DATESAVE".txt;
+    read -p "  Build variant [IMG/DAT]    : " BUILD_VARIANT | tee -i $AUR_LOGS/AUR-Repack-"$DATESAVE".txt;
+    read -p "  Brotli compress [Y/N]      : " USE_BROTLI | tee -i $AUR_LOGS/AUR-Repack-"$DATESAVE".txt;
+    read -p "  Cleanup after finish [Y/N] : " DO_CLEANUP | tee -i $AUR_LOGS/AUR-Repack-"$DATESAVE".txt;
+    echo "------------------------------------------------";
+    sleep 1;
+    repack;
+}
+
+
+# Repack function
+repack()
+{
+    header;
+    echo "| REPACKING                                    |";
+    echo "------------------------------------------------";
+    
+    # Let's record the time!
+    DATE=$(date +%Y%m%d-%H%M);
+    DATESAVE=$DATE;
+    TASK_START=$(date +"%s");
+
+    # Detecting file_contexts.bin, then convert it to plain text
+    if [ -f $PWD/file_contexts ];
+      then
+        echo "I: Found: file_contexts" | tee -i $AUR_LOGS/AUR-Repack-"$DATESAVE".txt;
+    elif [ -f $PWD/file_contexts.bin ];
+      then
+        echo "I: Found: file_contexts.bin, converting..." | tee -i $AUR_LOGS/AUR-Repack-"$DATESAVE".txt;
+        sefparse $PWD/file_contexts.bin | tee -i $AUR_LOGS/AUR-Repack-"$DATESAVE".txt;
+        rm -rf $PWD/file_contexts.bin;
+      else
+        echo "W: file_contexts not found" | tee -i $AUR_LOGS/AUR-Repack-"$DATESAVE".txt;
+    fi;
+
+    # Building image
+    if [ -d $PWD/system ];
+      then
+        find $PWD/system -type d -empty -exec rm -rf {} \; | tee -i $AUR_LOGS/AUR-Repack-"$DATESAVE".txt;
+        find $PWD/system -exec touch -a -m -h -d 2009-01-01T07:00:00 {} \; | tee -i $AUR_LOGS/AUR-Repack-"$DATESAVE".txt;
+        make_ext4fs -S $PWD/file_contexts -L system -a system -l $PARTITION_SIZE $PWD/system.img $PWD/system | tee -i $AUR_LOGS/AUR-Repack-"$DATESAVE".txt;
+    elif [ -d $PWD/vendor ];
+      then
+        find $PWD/vendor -type d -empty -exec rm -rf {} \; | tee -i $AUR_LOGS/AUR-Repack-"$DATESAVE".txt;
+        find $PWD/vendor -exec touch -a -m -h -d 2009-01-01T07:00:00 {} \; | tee -i $AUR_LOGS/AUR-Repack-"$DATESAVE".txt;
+        make_ext4fs -S $PWD/file_contexts -L vendor -a vendor -l $PARTITION_SIZE $PWD/vendor.img $PWD/vendor | tee -i $AUR_LOGS/AUR-Repack-"$DATESAVE".txt;
+      else
+        echo "- Failed to build image..." | tee -i $AUR_LOGS/AUR-Repack-"$DATESAVE".txt;
+        echo "- Exiting..." | tee -i $AUR_LOGS/AUR-Repack-"$DATESAVE".txt;
+        main_menu;
+    fi;
+
+    # Creating output dir in AUR's home
+    mkdir $AUR_HOME/$DATESAVE;
+
+    # If user choosing IMG, then the output image will stored to AUR's home
+    # But if user choosing DAT, the image will automatically converted to dat before stored to AUR's home
+    case $BUILD_VARIANT in
+    IMG) echo "I: Moving image to storage..." | tee -i $AUR_LOGS/AUR-Repack-"$DATESAVE".txt;
+         if [ -f $PWD/system.img ];
+           then
+             mv $PWD/system.img $AUR_HOME/$DATESAVE/system.img | tee -i $AUR_LOGS/AUR-Repack-"$DATESAVE".txt;
+           else
+             mv $PWD/vendor.img $AUR_HOME/$DATESAVE/vendor.img | tee -i $AUR_LOGS/AUR-Repack-"$DATESAVE".txt;
+         fi;;
+    DAT) echo "I: Converting image to dat..." | tee -i $AUR_LOGS/AUR-Repack-"$DATESAVE".txt;
+         if [ -f $PWD/system.img ];
+           then
+             img2sdat $PWD/system.img -v $SDK_VERSION -o $AUR_HOME/$DATESAVE | tee -i $AUR_LOGS/AUR-Repack-"$DATESAVE".txt;
+             rm -rf $PWD/system.img;
+           else
+             img2sdat $PWD/vendor.img -v 4 -o $AUR_HOME/$DATESAVE | tee -i $AUR_LOGS/AUR-Repack-"$DATESAVE".txt;
+             rm -rf $PWD/vendor.img;
+         fi;;
+    esac
+
+    # Compress dat with brotli? Android 8.0 above was using brotli to compress the system dat
+    # But if you wanna compress below Android 8.0, you can select "Y" at Partition Information
+    # Don't forget to edit xxxxxx.new.dat to xxxxxx.new.dat.br at your updater-script
+    case $USE_BROTLI in
+    Y) echo "I: Compressing dat with brotli..." | tee -i $AUR_LOGS/AUR-Repack-"$DATESAVE".txt;
+       if [ -f $AUR_HOME/$DATESAVE/system.new.dat ];
+         then
+           brotli -5 $AUR_HOME/$DATESAVE/system.new.dat;
+           rm -rf $AUR_HOME/$DATESAVE/system.new.dat;
+         else
+           brotli -5 $AUR_HOME/$DATESAVE/vendor.new.dat;
+           rm -rf $AUR_HOME/$DATESAVE/vendor.new.dat;
+       fi;;
+    N) echo "I: Skipping brotli compress..." | tee -i $AUR_LOGS/AUR-Repack-"$DATESAVE".txt;;
+    esac
+
+    # Cleanup after all task done? it will remove all stuff in current directory
+    case $DO_CLEANUP in
+    Y) echo "I: Cleaning up source..." | tee -i $AUR_LOGS/AUR-Repack-"$DATESAVE".txt;
+       rm -rf $PWD;; 
+    N) echo "I: Skipping cleanup..." | tee -i $AUR_LOGS/AUR-Repack-"$DATESAVE".txt;;
+    esac
+
+    # Record the time again
+    TASK_END=$(date +"%s");
+    DIFF_REPACK=$(($TASK_END - $TASK_START));
+
+    # Done
+    echo "I: Tasks complete...";
+    echo "I: Repacking took $(($DIFF_REPACK / 60)) minute(s) and $(($DIFF_REPACK % 60)) second(s)";
+    echo "I: $AUR_HOME/$DATESAVE/";
+    echo "------------------------------------------------";
+    echo "|  P R E S S  E N T E R  T O  C O N T I N U E  |";
+    read -p "------------------------------------------------" DONE;
+}
+
+# Contributors list
+contributors()
+{
+    header;
+    echo "| SPECIAL THANKS TO                            |";
+    echo "------------------------------------------------";
+    echo "  1. Andrei Conache, for his img2sdat2img script";
+    echo "     https://github.com/xpirt                   ";
+    echo "                                                ";
+    echo "  2. Jake Valletta, for his sefcontext script   ";
+    echo "     https://github.com/jakev                   ";
+    echo "                                                ";
+    echo "  3. Rendi Stiawan, for his ext4fs-tools script ";
+    echo "     https://github.com/rendiix                 ";
+    echo "                                                ";
+    echo "                  Written by                    ";
+    echo "               Adam Najmi Zidan                 ";
+    echo "         https://github.com/user-ilang          ";
+    echo "------------------------------------------------";
+    echo "|  P R E S S  E N T E R  T O  C O N T I N U E  |";
+    read -p "------------------------------------------------" DONE;
+}
+
+# Run script
+TERMUX=$PREFIX;
+TERMUX_BIN=$TERMUX/bin;
+XPIRT=$TERMUX/share/xpirt;
+JAKEV=$TERMUX/share/jakev;
+RENDIIX=$TERMUX/share/rendiix;
+EXTSD=$EXTERNAL_STORAGE;
+AUR_HOME=$EXTSD/#AUR;
+AUR_LOGS=$AUR_HOME/logs;
+AUR=$TERMUX_BIN/aur;
+AUR_TMP=$(pwd)/aur;
+EXT4=$TERMUX_BIN/make_ext4fs;
+IMG2SDAT=$XPIRT/img2sdat/img2sdat.py;
+SDAT2IMG=$XPIRT/sdat2img/sdat2img.py;
+
+# Set up AUR's HOME
+if [ -d $AUR_HOME ];
+  then
+    echo "" >/dev/null 2>&1;
+elif [ -d $AUR_LOGS ];
+  then
+    echo "" >/dev/null 2>&1;
+  else
+    mkdir $AUR_HOME;
+    mkdir $AUR_LOGS;
+fi;
+
+# Let's rock!!
+start;
