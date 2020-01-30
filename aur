@@ -225,12 +225,12 @@ unpack()
     if [ -f $PWD/system.new.dat ];
       then
         echo "I: Converting system with sdat2img..." | tee -i $AUR_LOGS/AUR-Unpack-"$DATESAVE".txt;
-        sdat2img $PWD/system.transfer.list $PWD/system.new.dat $PWD/system.img | tee -i $AUR_LOGS/AUR-Unpack-"$DATESAVE".txt;
+        sdat2img $PWD/system.transfer.list $PWD/system.new.dat $PWD/system.img >> $AUR_LOGS/AUR-Unpack-"$DATESAVE".txt;
         rm -rf $PWD/system.new.dat $PWD/system.patch.dat $PWD/system.transfer.list;
     elif [ -f $PWD/vendor.new.dat ];
       then
         echo "I: Converting vendor with sdat2img..." | tee -i $AUR_LOGS/AUR-Unpack-"$DATESAVE".txt;
-        sdat2img $PWD/vendor.transfer.list $PWD/vendor.new.dat $PWD/vendor.img | tee -i $AUR_LOGS/AUR-Unpack-"$DATESAVE".txt;
+        sdat2img $PWD/vendor.transfer.list $PWD/vendor.new.dat $PWD/vendor.img >> $AUR_LOGS/AUR-Unpack-"$DATESAVE".txt;
         rm -rf $PWD/vendor.new.dat $PWD/vendor.patch.dat $PWD/vendor.transfer.list;
       else
         echo "I: Skipping sdat2img task" | tee -i $AUR_LOGS/AUR-Unpack-"$DATESAVE".txt;
