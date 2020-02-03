@@ -65,13 +65,21 @@ setup_wizard()
     pkg_update >/dev/null 2>&1;
 
     # Checking xpirt's scripts
-    if [ -d $XPIRT ];
+    # Temp. Bug Fix #1
+    if [ -f $IMG2SDAT ];
       then
-        echo "I: Found: img2sdat-sdat2img";
+        echo "I: Found: img2sdat";
       else
-        echo "I: Installing img2sdat-sdat2img...";
+        echo "I: Installing img2sdat...";
         install_xpirt >/dev/null 2>&1;
-    fi;
+    fi
+    if [ -f $SDAT2IMG ];
+      then
+        echo "I: Found: sdat2img";
+      else
+        echo "I: Installing sdat2img...";
+        install_xpirt >/dev/null 2>&1;
+    fi
 
     # Checking jakev's scripts
     if [ -d $JAKEV ];
@@ -83,7 +91,7 @@ setup_wizard()
     fi;
 
     # Checking rendiix's scripts
-    if [ -d $RENDIIX ];
+    if [ -f $EXT4 ];
       then
         echo "I: Found: ext4fs-tools";
       else
@@ -117,6 +125,7 @@ pkg_update()
 # Install img2sdat2img function
 install_xpirt()
 {
+    rm -rf $XPIRT;
     mkdir $XPIRT;
     cd $XPIRT;
     git clone https://github.com/xpirt/img2sdat.git;
@@ -126,6 +135,7 @@ install_xpirt()
 # Install sefcontext-parser
 install_jakev()
 {
+    rm -rf $JAKEV;
     mkdir $JAKEV;
     cd $JAKEV;
     git clone https://github.com/jakev/sefcontext-parser.git;
@@ -136,6 +146,7 @@ install_jakev()
 # Install ext4utils
 install_rendiix()
 {
+    rm -rf $RENDIIX;
     mkdir $RENDIIX;
     cd $RENDIIX;
     wget https://rendiix.github.io/install-repo.sh
@@ -168,7 +179,7 @@ main_menu()
     echo " 4. Contributors                               ";
     echo " 0. Exit                                       ";
     echo "------------------------------------------------";
-    read -p "> Select what's do you need [0-3]: " INPUT;
+    read -p "> Select what's do you need [0-4]: " INPUT;
 
     # Redirect to other functions
     case $INPUT in
