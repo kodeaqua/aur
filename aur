@@ -362,8 +362,8 @@ repack()
     esac
 
     # Record the time again
-    TASK_END=$(date +"%s");
-    DIFF_REPACK=$(($TASK_END - $TASK_START));
+    END=$(date +"%s");
+    TIME=$(($END - $START));
 
     # Done
     echo "I: Tasks complete...";
