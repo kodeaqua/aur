@@ -194,7 +194,7 @@ unpack()
     fi;
 
     # Extracting your image
-    if [ -f ./system.img ];
+    if [ -f ./system_raw.img ];
       then
         echo "I: Extracting system image..." | tee -i $AUR_LOGS/AUR-Unpack-"$DATESAVE".txt;
         mkdir ./system ./tmp;
