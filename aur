@@ -1,10 +1,10 @@
 #!/data/data/com.termux/files/usr/bin/bash
 # Android Unpack Repack
-# version 1.0
+# version 1.1
 # Written by: Adam Najmi Zidan (user-ilang)
 # Special Thanks to: 1. Andrei Conache (xpirt), for his img2sdat2img script
 #                    2. Jake Valletta (jakev), for his sefcontext-parser script
-#                    3. Rendi Stiawan (Rendiix), for his ext4fs-tools
+#                    3. Rendi Stiawan (Rendiix), for his amazing pkg
 #                    4. Google, StackOverFlow, and many more!
 #
 # Notes: I don't know what the name of this project will be, so I just name it
@@ -25,8 +25,7 @@
 # Begin list of all functions
 #
 
-# Start
-# if AUR was started, it decide to going main_menu or setup_wizard (for first time only)
+# Func 1: if AUR was started, it decide to going main_menu or setup_wizard (for first time only)
 start()
 {
     if [ -f $AUR ];
@@ -37,21 +36,19 @@ start()
     fi;
 }
 
-# Header
-# Just to show up AUR banner in terminal :D
+# Func 2: Just to show up AUR banner in console :D
 header()
 {
     clear;
     echo "------------------------------------------------";
-    echo "|                                              |";
-    echo "|   A N D R O I D  U N P A C K  R E P A C K    |";
-    echo "|                                              |";
+    echo "-                                              -";
+    echo "-   A N D R O I D  U N P A C K  R E P A C K    -";
+    echo "-                                              -";
     echo "------------------------------------------------";
     sleep 1;
 }
 
-# Setup Wizard
-# For AUR installation and checking AUR in menu
+# Func 3: For AUR installation and checking AUR in menu
 setup_wizard()
 {
 
@@ -59,51 +56,34 @@ setup_wizard()
     header;
     echo "| WELCOME TO AUR SETUP WIZARD!                 |";
     echo "------------------------------------------------";
+    
+    # Preparing
+    echo "I: Preparing setup...";
+    AUR_DIR=$(pwd);
+    AUR_TMP=$AUR_DIR/aur;
 
     # Updating Package
     echo "I: Update and Installing package(s)";
-    pkg_update >/dev/null 2>&1;
+    tmux_pkg >/dev/null 2>&1;
 
-    # Checking xpirt's scripts
-    # Temp. Bug Fix #1
-    if [ -f $IMG2SDAT ];
+    # Checking Rendiix's package(s)
+    if [ -f $RENDIIX ];
       then
-        echo "I: Found: img2sdat";
+        echo "I: Found: Rendiix's package(s)";
       else
-        echo "I: Installing img2sdat...";
-        install_xpirt >/dev/null 2>&1;
-    fi
-    if [ -f $SDAT2IMG ];
-      then
-        echo "I: Found: sdat2img";
-      else
-        echo "I: Installing sdat2img...";
-        install_xpirt >/dev/null 2>&1;
-    fi
-
-    # Checking jakev's scripts
-    if [ -d $JAKEV ];
-      then
-        echo "I: Found: sefcontext-parser";
-      else
-        echo "I: Installing sefcontext-parser...";
-        install_jakev >/dev/null 2>&1;
+        echo "I: Installing Rendiix's package(s)";
+        rendiix_pkg >/dev/null 2>&1;
     fi;
 
-    # Checking rendiix's scripts
-    if [ -f $EXT4 ];
-      then
-        echo "I: Found: ext4fs-tools";
-      else
-        echo "I: Installing ext4fs-tools...";
-        install_rendiix >/dev/null 2>&1;
-    fi;
-
-    # Finishing
-    echo "I: Pushing aur script...";
+    # Installing AUR
+    echo "I: Installing aur script...";
     mv $AUR_TMP $AUR >/dev/null 2>&1;
-    cd ..;
-    rm -rf $PWD/aur >/dev/null 2>&1;
+    
+    # Clean up script
+    rm -rf $AUR_DIR;
+    
+    # Finishing
+    cd $HOME;
 
     # Doneee
     echo "I: AUR has been installed to your Termux";
@@ -114,60 +94,25 @@ setup_wizard()
     read -p "------------------------------------------------" DONE;
 }
 
-# Updating packages
-# This will instal/update some packages (tsu git wget python brotli)
-pkg_update()
+# Func 4: This will instal/update some packages (tsu git wget python brotli)
+tmux_pkg()
 {
-    pkg update -y;
-    pkg upgrade -y;
+    pkg update -y && pkg upgrade -y;
     pkg install tsu git wget python brotli -y;
 }
 
-# Install img2sdat2img function
-install_xpirt()
+# Func 5: Installing Rendiix dependencies and update pkg
+rendiix_pkg()
 {
-    rm -rf $XPIRT;
-    mkdir $XPIRT;
-    cd $XPIRT;
-    git clone https://github.com/xpirt/img2sdat.git;
-    git clone https://github.com/xpirt/sdat2img.git;
+    mkdir $RENDIIX && cd $RENDIIX;
+    wget https://rendiix.github.io/install-repo.sh;
+    chmod +x install-repo.sh;
+    bash install-repo.sh;
+    pkg update -y && pkg upgrade -y;
+    pkg install ext4fs-tools img2sdat sdat2img -y;
 }
 
-# Install sefcontext-parser
-install_jakev()
-{
-    rm -rf $JAKEV;
-    mkdir $JAKEV;
-    cd $JAKEV;
-    git clone https://github.com/jakev/sefcontext-parser.git;
-    cd $PWD/sefcontext-parser;
-    python $PWD/setup.py install
-}
-
-# Install ext4utils
-install_rendiix()
-{
-    rm -rf $RENDIIX;
-    mkdir $RENDIIX;
-    cd $RENDIIX;
-    wget https://rendiix.github.io/install-repo.sh
-    ./install-repo.sh
-    pkg install ext4fs-tools;
-}
-
-# Img2sdat caller
-img2sdat()
-{
-    python $IMG2SDAT "$1" "$2" "$3" "$4" "$5";
-}
-
-# Sdat2img caller
-sdat2img()
-{
-    python $SDAT2IMG "$1" "$2" "$3";
-}
-
-# Show AUR's main menu
+# Func 6: Show AUR's main menu
 main_menu()
 {
     # AUR's list menus
@@ -198,7 +143,7 @@ main_menu()
     esac;
 }
 
-# Unpack function
+# Func 7: Unpack function
 unpack()
 {
     # Show up header
@@ -209,91 +154,91 @@ unpack()
     # Let's record time to unpack
     DATE=$(date +%Y%m%d-%H%M);
     DATESAVE=$DATE;
-    UNPACK_START=$(date +"%s");
+    START=$(date +"%s");
 
     # Cleaning old files
     echo "I: Cleaning up old files..." | tee -i $AUR_LOGS/AUR-Unpack-"$DATESAVE".txt;
     for dir in system vendor tmp;
       do
-        rm -rf $PWD/$dir;
+        rm -rf ./$dir;
     done;
 
     # Checking if your dat was compressed with brotli or not
-    if [ -f $PWD/system.new.dat.br ];
+    if [ -f ./system.new.dat.br ];
       then
         echo "I: Decompressing system with brotli..." | tee -i $AUR_LOGS/AUR-Unpack-"$DATESAVE".txt;
-        brotli -d $PWD/system.new.dat.br;
-        rm -rf $PWD/system.new.dat.br;
-    elif [ -f $PWD/vendor.new.dat.br ];
+        brotli -d ./system.new.dat.br;
+        rm -rf ./system.new.dat.br;
+    elif [ -f ./vendor.new.dat.br ];
       then
         echo "I: Decompressing vendor with brotli..." | tee -i $AUR_LOGS/AUR-Unpack-"$DATESAVE".txt;
-        brotli -d $PWD/vendor.new.dat.br;
-        rm -rf $PWD/vendor.new.dat.br;
+        brotli -d ./vendor.new.dat.br;
+        rm -rf ./vendor.new.dat.br;
       else
         echo "I: Skipping brotli decompressing..." | tee -i $AUR_LOGS/AUR-Unpack-"$DATESAVE".txt;
     fi;
 
     # If your dat aren't compressed with brotli, then your dat will automatically converted to image
-    if [ -f $PWD/system.new.dat ];
+    if [ -f ./system.new.dat ];
       then
         echo "I: Converting system with sdat2img..." | tee -i $AUR_LOGS/AUR-Unpack-"$DATESAVE".txt;
-        sdat2img $PWD/system.transfer.list $PWD/system.new.dat $PWD/system.img >> $AUR_LOGS/AUR-Unpack-"$DATESAVE".txt;
-        rm -rf $PWD/system.new.dat $PWD/system.patch.dat $PWD/system.transfer.list;
-    elif [ -f $PWD/vendor.new.dat ];
+        sdat2img ./system.transfer.list ./system.new.dat ./system_raw.img >> $AUR_LOGS/AUR-Unpack-"$DATESAVE".txt;
+        rm -rf ./system.new.dat ./system.patch.dat ./system.transfer.list;
+    elif [ -f ./vendor.new.dat ];
       then
         echo "I: Converting vendor with sdat2img..." | tee -i $AUR_LOGS/AUR-Unpack-"$DATESAVE".txt;
-        sdat2img $PWD/vendor.transfer.list $PWD/vendor.new.dat $PWD/vendor.img >> $AUR_LOGS/AUR-Unpack-"$DATESAVE".txt;
-        rm -rf $PWD/vendor.new.dat $PWD/vendor.patch.dat $PWD/vendor.transfer.list;
+        sdat2img ./vendor.transfer.list ./vendor.new.dat ./vendor_raw.img >> $AUR_LOGS/AUR-Unpack-"$DATESAVE".txt;
+        rm -rf ./vendor.new.dat ./vendor.patch.dat ./vendor.transfer.list;
       else
         echo "I: Skipping sdat2img task" | tee -i $AUR_LOGS/AUR-Unpack-"$DATESAVE".txt;
     fi;
 
     # Extracting your image
-    if [ -f $PWD/system.img ];
+    if [ -f ./system.img ];
       then
         echo "I: Extracting system image..." | tee -i $AUR_LOGS/AUR-Unpack-"$DATESAVE".txt;
-        mkdir $PWD/system $PWD/tmp;
-        losetup /dev/block/loop3 $PWD/system.img;
-        mount -t ext4 /dev/block/loop3 $PWD/system;
-        cp -rfp $PWD/system $PWD/tmp;
+        mkdir ./system ./tmp;
+        losetup /dev/block/loop3 ./system_raw.img;
+        mount -t ext4 /dev/block/loop3 ./system;
+        cp -rfp ./system ./tmp;
         losetup -d /dev/block/loop3;
         umount /dev/block/loop3;
-        mv $PWD/tmp/system $PWD;
-        rm -rf $PWD/system.img $PWD/tmp;
-    elif [ -f $PWD/vendor.img ];
+        mv ./tmp/system ./;
+        rm -rf ./system_raw.img ./tmp;
+    elif [ -f ./vendor_raw.img ];
       then
         echo "I: Extracting vendor image..." | tee -i $AUR_LOGS/AUR-Unpack-"$DATESAVE".txt;
-        mkdir $PWD/vendor $PWD/tmp;
-        losetup /dev/block/loop3 $PWD/vendor.img;
-        mount -t ext4 /dev/block/loop3 $PWD/vendor;
-        cp -rfp $PWD/vendor $PWD/tmp;
+        mkdir ./vendor ./tmp;
+        losetup /dev/block/loop3 ./vendor_raw.img;
+        mount -t ext4 /dev/block/loop3 ./vendor;
+        cp -rfp ./vendor ./tmp;
         losetup -d /dev/block/loop3;
         umount /dev/block/loop3;
-        mv $PWD/tmp/vendor $PWD;
-        rm -rf $PWD/vendor.img $PWD/tmp;
+        mv ./tmp/vendor ./;
+        rm -rf ./vendor_raw.img ./tmp;
       else
         echo "E: Failed to extract image..." | tee -i $AUR_LOGS/AUR-Unpack-"$DATESAVE".txt;
     fi;
 
     # Record the time again
-    UNPACK_END=$(date +"%s");
-    DIFF_UNPACK=$(($UNPACK_END - $UNPACK_START));
+    END=$(date +"%s");
+    TIME=$(($END - $START));
 
     # Done
     echo "I: Tasks complete..." | tee -i $AUR_LOGS/AUR-Unpack-"$DATESAVE".txt;
-    echo "I: Unpacking took $(($DIFF_UNPACK / 60)) minute(s) and $(($DIFF_UNPACK % 60)) second(s)" | tee -i $AUR_LOGS/AUR-Unpack-"$DATESAVE".txt;
+    echo "I: Unpacking took $(($TIME / 60)) minute(s) and $(($TIME % 60)) second(s)" | tee -i $AUR_LOGS/AUR-Unpack-"$DATESAVE".txt;
     echo "------------------------------------------------";
     echo "|  P R E S S  E N T E R  T O  C O N T I N U E  |";
     read -p "------------------------------------------------" DONE;
 }
 
-# Detecting partition
+# Func 8: Detecting partition
 detect_partition()
 {
-    if [ -d $PWD/system ];
+    if [ -d ./system ];
       then
         system_info;
-    elif [ -d $PWD/vendor ];
+    elif [ -d ./vendor ];
       then
         vendor_info;
       else
@@ -301,7 +246,7 @@ detect_partition()
     fi;
 }
 
-# Get system information
+# Func 9: Get system information
 system_info()
 {
     header;
@@ -317,8 +262,7 @@ system_info()
     repack;
 }
 
-
-# Get vendor information
+# Func 10: Get vendor information
 vendor_info()
 {
     header;
@@ -333,8 +277,7 @@ vendor_info()
     repack;
 }
 
-
-# Repack function
+# Func 11: Repack function
 repack()
 {
     header;
@@ -344,32 +287,19 @@ repack()
     # Let's record the time!
     DATE=$(date +%Y%m%d-%H%M);
     DATESAVE=$DATE;
-    TASK_START=$(date +"%s");
-
-    # Detecting file_contexts.bin, then convert it to plain text
-    if [ -f $PWD/file_contexts ];
-      then
-        echo "I: Found: file_contexts" | tee -i $AUR_LOGS/AUR-Repack-"$DATESAVE".txt;
-    elif [ -f $PWD/file_contexts.bin ];
-      then
-        echo "I: Found: file_contexts.bin, converting..." | tee -i $AUR_LOGS/AUR-Repack-"$DATESAVE".txt;
-        sefparse $PWD/file_contexts.bin | tee -i $AUR_LOGS/AUR-Repack-"$DATESAVE".txt;
-        rm -rf $PWD/file_contexts.bin;
-      else
-        echo "W: file_contexts not found" | tee -i $AUR_LOGS/AUR-Repack-"$DATESAVE".txt;
-    fi;
+    START=$(date +"%s");
 
     # Building image
-    if [ -d $PWD/system ];
+    if [ -d ./system ];
       then
-        find $PWD/system -type d -empty -exec rm -rf {} \; | tee -i $AUR_LOGS/AUR-Repack-"$DATESAVE".txt;
-        find $PWD/system -exec touch -a -m -h -d 2009-01-01T07:00:00 {} \; | tee -i $AUR_LOGS/AUR-Repack-"$DATESAVE".txt;
-        make_ext4fs -S $PWD/file_contexts -L system -a system -l $PARTITION_SIZE $PWD/system.img $PWD/system | tee -i $AUR_LOGS/AUR-Repack-"$DATESAVE".txt;
-    elif [ -d $PWD/vendor ];
+        find ./system -type d -empty -exec rm -rf {} \; | tee -i $AUR_LOGS/AUR-Repack-"$DATESAVE".txt;
+        find ./system -exec touch -a -m -h -d 2009-01-01T07:00:00 {} \; | tee -i $AUR_LOGS/AUR-Repack-"$DATESAVE".txt;
+        make_ext4fs -L system -a system -l $PARTITION_SIZE ./system_raw.img ./system | tee -i $AUR_LOGS/AUR-Repack-"$DATESAVE".txt;
+    elif [ -d ./vendor ];
       then
-        find $PWD/vendor -type d -empty -exec rm -rf {} \; | tee -i $AUR_LOGS/AUR-Repack-"$DATESAVE".txt;
-        find $PWD/vendor -exec touch -a -m -h -d 2009-01-01T07:00:00 {} \; | tee -i $AUR_LOGS/AUR-Repack-"$DATESAVE".txt;
-        make_ext4fs -S $PWD/file_contexts -L vendor -a vendor -l $PARTITION_SIZE $PWD/vendor.img $PWD/vendor | tee -i $AUR_LOGS/AUR-Repack-"$DATESAVE".txt;
+        find ./vendor -type d -empty -exec rm -rf {} \; | tee -i $AUR_LOGS/AUR-Repack-"$DATESAVE".txt;
+        find ./vendor -exec touch -a -m -h -d 2009-01-01T07:00:00 {} \; | tee -i $AUR_LOGS/AUR-Repack-"$DATESAVE".txt;
+        make_ext4fs -L vendor -a vendor -l $PARTITION_SIZE ./vendor_raw.img ./vendor | tee -i $AUR_LOGS/AUR-Repack-"$DATESAVE".txt;
       else
         echo "- Failed to build image..." | tee -i $AUR_LOGS/AUR-Repack-"$DATESAVE".txt;
         echo "- Exiting..." | tee -i $AUR_LOGS/AUR-Repack-"$DATESAVE".txt;
@@ -383,20 +313,28 @@ repack()
     # But if user choosing DAT, the image will automatically converted to dat before stored to AUR's home
     case $BUILD_VARIANT in
     IMG) echo "I: Moving image to storage..." | tee -i $AUR_LOGS/AUR-Repack-"$DATESAVE".txt;
-         if [ -f $PWD/system.img ];
+         if [ -f ./system_raw.img ];
            then
-             mv $PWD/system.img $AUR_HOME/$DATESAVE/system.img | tee -i $AUR_LOGS/AUR-Repack-"$DATESAVE".txt;
+             mv ./system_raw.img $AUR_HOME/$DATESAVE/system_raw.img | tee -i $AUR_LOGS/AUR-Repack-"$DATESAVE".txt;
            else
-             mv $PWD/vendor.img $AUR_HOME/$DATESAVE/vendor.img | tee -i $AUR_LOGS/AUR-Repack-"$DATESAVE".txt;
+             mv ./vendor_raw.img $AUR_HOME/$DATESAVE/vendor_raw.img | tee -i $AUR_LOGS/AUR-Repack-"$DATESAVE".txt;
          fi;;
-    DAT) echo "I: Converting image to dat..." | tee -i $AUR_LOGS/AUR-Repack-"$DATESAVE".txt;
-         if [ -f $PWD/system.img ];
+    DAT) echo "I: Converting raw image to sparse image..." | tee -i $AUR_LOGS/AUR-Repack-"$DATESAVE".txt;
+         if [ -f ./system_raw.img ];
            then
-             img2sdat $PWD/system.img -v $SDK_VERSION -o $AUR_HOME/$DATESAVE | tee -i $AUR_LOGS/AUR-Repack-"$DATESAVE".txt;
-             rm -rf $PWD/system.img;
+             img2simg ./system_raw.img ./system_sparse.img >> $AUR_LOGS/AUR-Repack-"$DATESAVE".txt;
            else
-             img2sdat $PWD/vendor.img -v 4 -o $AUR_HOME/$DATESAVE | tee -i $AUR_LOGS/AUR-Repack-"$DATESAVE".txt;
-             rm -rf $PWD/vendor.img;
+             img2simg ./vendor_raw.img ./vendor_sparse.img >> $AUR_LOGS/AUR-Repack-"$DATESAVE".txt;
+         fi;
+
+         echo "I: Converting sparse image to dat..." | tee -i $AUR_LOGS/AUR-Repack-"$DATESAVE".txt;
+         if [ -f ./system_sparse.img ];
+           then
+             img2sdat ./system_sparse.img -v $SDK_VERSION -o $AUR_HOME/$DATESAVE >> $AUR_LOGS/AUR-Repack-"$DATESAVE".txt;
+             rm -rf ./system_sparse.img;
+           else
+             img2sdat ./vendor_sparse.img -v 4 -o $AUR_HOME/$DATESAVE >> $AUR_LOGS/AUR-Repack-"$DATESAVE".txt;
+             rm -rf ./vendor_sparse.img;
          fi;;
     esac
 
@@ -419,7 +357,7 @@ repack()
     # Cleanup after all task done? it will remove all stuff in current directory
     case $DO_CLEANUP in
     Y) echo "I: Cleaning up source..." | tee -i $AUR_LOGS/AUR-Repack-"$DATESAVE".txt;
-       rm -rf $PWD;; 
+       rm -rf ./;; 
     N) echo "I: Skipping cleanup..." | tee -i $AUR_LOGS/AUR-Repack-"$DATESAVE".txt;;
     esac
 
@@ -436,7 +374,7 @@ repack()
     read -p "------------------------------------------------" DONE;
 }
 
-# Contributors list
+# Func 12: Show contributors list
 contributors()
 {
     header;
@@ -460,19 +398,10 @@ contributors()
 }
 
 # Run script
-TERMUX=$PREFIX;
-TERMUX_BIN=$TERMUX/bin;
-XPIRT=$TERMUX/share/xpirt;
-JAKEV=$TERMUX/share/jakev;
-RENDIIX=$TERMUX/share/rendiix;
-EXTSD=$EXTERNAL_STORAGE;
-AUR_HOME=$EXTSD/#AUR;
+AUR=$PREFIX/bin/aur;
+AUR_HOME=$EXTERNAL_STORAGE/#AUR;
 AUR_LOGS=$AUR_HOME/logs;
-AUR=$TERMUX_BIN/aur;
-AUR_TMP=$(pwd)/aur;
-EXT4=$TERMUX_BIN/make_ext4fs;
-IMG2SDAT=$XPIRT/img2sdat/img2sdat.py;
-SDAT2IMG=$XPIRT/sdat2img/sdat2img.py;
+RENDIIX=$PREFIX/share/rendiix;
 
 # Set up AUR's HOME
 if [ -d $AUR_HOME ];
