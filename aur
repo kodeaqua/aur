@@ -1,7 +1,7 @@
 #!/data/data/com.termux/files/usr/bin/bash
 # Android Unpack Repack
 # version 1.1
-# Written by: Adam Najmi Zidan (user-ilang)
+# Written by: Adam Najmi Zidan (damnz)
 # Special Thanks to: 1. Andrei Conache (xpirt), for his img2sdat2img script
 #                    2. Jake Valletta (jakev), for his sefcontext-parser script
 #                    3. Rendi Stiawan (Rendiix), for his amazing pkg
